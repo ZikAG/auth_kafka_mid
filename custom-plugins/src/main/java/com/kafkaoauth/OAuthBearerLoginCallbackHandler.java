@@ -294,7 +294,7 @@ public class OAuthBearerLoginCallbackHandler implements AuthenticateCallbackHand
         private final String principalName;
         private final long lifetimeMs;
         private final Set<String> scope;
-        private final long startTimeMs;
+        private final Long startTimeMs;
 
         KafkaOAuthBearerToken(String value, String principalName,
                               long lifetimeMs, Set<String> scope, long startTimeMs) {
@@ -334,7 +334,7 @@ public class OAuthBearerLoginCallbackHandler implements AuthenticateCallbackHand
 
         /** Token issue time in epoch milliseconds derived from the {@code iat} claim. */
         @Override
-        public long startTimeMs() {
+        public Long startTimeMs() {
             return startTimeMs;
         }
 

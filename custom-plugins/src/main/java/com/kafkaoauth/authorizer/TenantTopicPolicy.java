@@ -157,7 +157,7 @@ public class TenantTopicPolicy implements CreateTopicPolicy, AlterConfigPolicy {
         String resourceName = requestMetadata.resource().name();
 
         // Only validate topic resources
-        if (requestMetadata.resource().resourceType()
+        if (requestMetadata.resource().type()
                 != org.apache.kafka.common.config.ConfigResource.Type.TOPIC) {
             return;
         }

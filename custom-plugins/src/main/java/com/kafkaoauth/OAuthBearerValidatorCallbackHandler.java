@@ -137,9 +137,8 @@ public class OAuthBearerValidatorCallbackHandler implements AuthenticateCallback
         for (Callback callback : callbacks) {
             if (callback instanceof OAuthBearerValidatorCallback validatorCallback) {
                 handleValidatorCallback(validatorCallback);
-            } else if (callback instanceof OAuthBearerExtensionsValidatorCallback extCallback) {
-                // Extensions are not used in this implementation; accept all
-                extCallback.valid(extCallback.requestedExtensions().keySet());
+            } else if (callback instanceof OAuthBearerExtensionsValidatorCallback) {
+                // Extensions are not used; no-op (Kafka skips validation when nothing is marked invalid)
             } else {
                 throw new UnsupportedCallbackException(callback,
                         "Unsupported callback type: " + callback.getClass().getName());

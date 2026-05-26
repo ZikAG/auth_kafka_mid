@@ -1,6 +1,7 @@
 package com.kafkaoauth.authorizer;
 
 import org.apache.kafka.common.Endpoint;
+import org.apache.kafka.common.errors.ApiException;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.acl.AclOperation;
@@ -333,8 +334,8 @@ public class CustomKafkaAuthorizer implements Authorizer {
             List<AclBinding> aclBindings) {
         // ACLs are managed through JWT claims; static ACL creation is not supported
         return aclBindings.stream()
-                .map(acl -> CompletableFuture.completedFuture(
-                        new AclCreateResult(new UnsupportedOperationException(
+                .map(acl -> CompletableFuture.<AclCreateResult>completedFuture(
+                        new AclCreateResult(new ApiException(
                                 "CustomKafkaAuthorizer does not support static ACL management"))))
                 .collect(Collectors.toList());
     }
@@ -344,8 +345,8 @@ public class CustomKafkaAuthorizer implements Authorizer {
             AuthorizableRequestContext requestContext,
             List<AclBindingFilter> aclBindingFilters) {
         return aclBindingFilters.stream()
-                .map(filter -> CompletableFuture.completedFuture(
-                        new AclDeleteResult(new UnsupportedOperationException(
+                .map(filter -> CompletableFuture.<AclDeleteResult>completedFuture(
+                        new AclDeleteResult(new ApiException(
                                 "CustomKafkaAuthorizer does not support static ACL management"))))
                 .collect(Collectors.toList());
     }

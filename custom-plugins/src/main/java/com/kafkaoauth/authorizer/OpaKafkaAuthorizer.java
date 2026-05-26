@@ -10,6 +10,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.kafka.common.Endpoint;
+import org.apache.kafka.common.errors.ApiException;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.acl.AclOperation;
@@ -317,8 +318,8 @@ public class OpaKafkaAuthorizer implements Authorizer {
             AuthorizableRequestContext requestContext,
             List<AclBinding> aclBindings) {
         return aclBindings.stream()
-                .map(acl -> CompletableFuture.completedFuture(
-                        new AclCreateResult(new UnsupportedOperationException(
+                .map(acl -> CompletableFuture.<AclCreateResult>completedFuture(
+                        new AclCreateResult(new ApiException(
                                 "OpaKafkaAuthorizer does not support static ACL management"))))
                 .collect(Collectors.toList());
     }
@@ -328,8 +329,8 @@ public class OpaKafkaAuthorizer implements Authorizer {
             AuthorizableRequestContext requestContext,
             List<AclBindingFilter> aclBindingFilters) {
         return aclBindingFilters.stream()
-                .map(filter -> CompletableFuture.completedFuture(
-                        new AclDeleteResult(new UnsupportedOperationException(
+                .map(filter -> CompletableFuture.<AclDeleteResult>completedFuture(
+                        new AclDeleteResult(new ApiException(
                                 "OpaKafkaAuthorizer does not support static ACL management"))))
                 .collect(Collectors.toList());
     }
