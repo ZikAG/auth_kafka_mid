@@ -1,7 +1,7 @@
 # ============================================================
 # Stage 1: Build the fat JAR with Maven
 # ============================================================
-FROM maven:3.9.7-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
