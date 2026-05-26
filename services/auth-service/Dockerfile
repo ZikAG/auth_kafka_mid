@@ -13,7 +13,7 @@ RUN go mod download
 # Copy source and compile a statically linked binary.
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-w -s" -o auth-service ./...
+    go build -ldflags="-w -s" -o auth-service .
 
 # ── Stage 2: Distroless runtime ───────────────────────────────────────────────
 FROM gcr.io/distroless/static-debian12
