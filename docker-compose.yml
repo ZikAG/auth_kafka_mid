@@ -1,0 +1,314 @@
+version: '3.9'
+
+networks:
+  kafka-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres-data:
+  kafka-data:
+  kafka-logs:
+  kafka-plugins:
+  certs:
+
+services:
+  # ─── TLS Certificate Generator ─────────────────────────────────────────────
+  cert-init:
+    image: alpine/openssl:latest
+    volumes:
+      - certs:/certs
+      - ./scripts/generate-certs.sh:/generate-certs.sh:ro
+    entrypoint: ["/bin/sh", "/generate-certs.sh"]
+    networks:
+      - kafka-net
+    restart: "no"
+
+  # ─── Java Plugin Builder ────────────────────────────────────────────────────
+  plugin-builder:
+    build:
+      context: ./custom-plugins
+      dockerfile: Dockerfile
+    volumes:
+      - kafka-plugins:/plugins
+    networks:
+      - kafka-net
+    restart: "no"
+
+  # ─── PostgreSQL for Keycloak ────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Keycloak IAM ──────────────────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_FEATURES: "token-exchange,admin-fine-grained-authz"
+      KC_LOG_LEVEL: INFO
+      KC_METRICS_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    ports:
+      - "8180:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  # ─── Apache Kafka (KRaft mode) ──────────────────────────────────────────────
+  kafka:
+    image: apache/kafka:3.7.1
+    hostname: kafka
+    environment:
+      # KRaft settings
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9091"
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # Listeners
+      KAFKA_LISTENERS: CONTROLLER://0.0.0.0:9091,SASL_SSL://0.0.0.0:9093,PLAINTEXT://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka:9093,PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,SASL_SSL:SASL_SSL,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+
+      # SASL/OAUTHBEARER
+      KAFKA_SASL_ENABLED_MECHANISMS: OAUTHBEARER
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: OAUTHBEARER
+      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required
+        oauth.jwks.endpoint.uri="http://keycloak:8080/realms/kafka-realm/protocol/openid-connect/certs"
+        oauth.token.endpoint.uri="http://keycloak:8080/realms/kafka-realm/protocol/openid-connect/token"
+        oauth.client.id="kafka-broker"
+        oauth.client.secret="kafka-broker-secret"
+        oauth.valid.issuer.uri="http://keycloak:8080/realms/kafka-realm"
+        oauth.username.claim="sub";
+      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerLoginCallbackHandler
+      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerValidatorCallbackHandler
+
+      # TLS (PEM format - alpine/openssl compatible)
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.crt
+      KAFKA_SSL_KEY_PASSWORD: kafka_key_password
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/ca.crt
+      KAFKA_SSL_CLIENT_AUTH: required
+
+      # Custom Authorizer
+      KAFKA_AUTHORIZER_CLASS_NAME: com.kafkaoauth.authorizer.CustomKafkaAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:kafka-broker;User:admin"
+
+      # Authorizer config
+      KAFKA_AUTHORIZER_OPA_URL: "http://opa:8181/v1/data/kafka/authz/allow"
+      KAFKA_AUTHORIZER_TYPE: "${AUTHORIZER_TYPE:-custom}"
+      KAFKA_AUTHORIZER_KEYCLOAK_JWKS_URI: "http://keycloak:8080/realms/kafka-realm/protocol/openid-connect/certs"
+
+      # Topic policies
+      KAFKA_CREATE_TOPIC_POLICY_CLASS_NAME: com.kafkaoauth.authorizer.TenantTopicPolicy
+      KAFKA_QUOTA_WINDOW_SIZE_SECONDS: "1"
+
+      # General
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+      # JMX for metrics
+      KAFKA_JMX_PORT: "9101"
+      KAFKA_JMX_HOSTNAME: kafka
+
+      # Extra classpath for custom plugins
+      CLASSPATH: /opt/kafka/plugins/*
+
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-logs:/opt/kafka/logs
+      - kafka-plugins:/opt/kafka/plugins
+      - certs:/etc/kafka/secrets:ro
+      - ./config/kafka/log4j.properties:/opt/kafka/config/log4j.properties:ro
+    ports:
+      - "9093:9093"
+      - "9101:9101"
+    depends_on:
+      cert-init:
+        condition: service_completed_successfully
+      plugin-builder:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ─── Kafka Init (topics + tenants) ─────────────────────────────────────────
+  kafka-init:
+    image: apache/kafka:3.7.1
+    volumes:
+      - ./scripts/init-kafka-topics.sh:/init-kafka-topics.sh:ro
+      - certs:/etc/kafka/secrets:ro
+    entrypoint: ["/bin/sh", "/init-kafka-topics.sh"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - kafka-net
+    restart: "no"
+
+  # ─── Auth Service (Go) ──────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    environment:
+      PORT: "8080"
+      KEYCLOAK_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "kafka-realm"
+      KEYCLOAK_CLIENT_ID: "auth-service"
+      KEYCLOAK_CLIENT_SECRET: "auth-service-secret"
+      KAFKA_CLIENT_ID: "kafka-client"
+      KAFKA_CLIENT_SECRET: "kafka-client-secret"
+      JWT_ISSUER: "http://keycloak:8080/realms/kafka-realm"
+      TOKEN_EXCHANGE_TARGET_AUDIENCE: "kafka-broker"
+      KAFKA_TOKEN_LIFETIME_SECONDS: "300"
+      RATE_LIMIT_RPS: "100"
+      LOG_LEVEL: "info"
+      ENVIRONMENT: "production"
+      ENABLE_METRICS: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ─── Test Client (Go) ───────────────────────────────────────────────────────
+  test-client:
+    build:
+      context: ./services/test-client
+      dockerfile: Dockerfile
+    environment:
+      AUTH_SERVICE_URL: "http://auth-service:8080"
+      KAFKA_BOOTSTRAP: "kafka:9093"
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      KAFKA_SASL_MECHANISM: "OAUTHBEARER"
+      KAFKA_SSL_CA_CERT: "/certs/ca.crt"
+      TENANT_A_USER: "alice"
+      TENANT_A_PASSWORD: "alice_password"
+      TENANT_A_ID: "tenant-a"
+      TENANT_B_USER: "bob"
+      TENANT_B_PASSWORD: "bob_password"
+      TENANT_B_ID: "tenant-b"
+      LOG_LEVEL: "info"
+    volumes:
+      - certs:/certs:ro
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - kafka-net
+    restart: on-failure
+
+  # ─── OPA Policy Engine ──────────────────────────────────────────────────────
+  opa:
+    image: openpolicyagent/opa:0.65.0
+    command: ["run", "--server", "--log-level=info", "--addr=0.0.0.0:8181", "/policies", "/data"]
+    volumes:
+      - ./opa/policies:/policies:ro
+      - ./opa/data:/data:ro
+    ports:
+      - "8181:8181"
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Prometheus ─────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - kafka-net
+
+  # ─── Grafana ────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.3
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - kafka-net
