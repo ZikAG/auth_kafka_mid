@@ -36,15 +36,15 @@ type IntrospectionResponse struct {
 
 // keycloakError holds the error body returned by Keycloak on failure.
 type keycloakError struct {
-	Error            string `json:"error"`
+	ErrorCode        string `json:"error"`
 	ErrorDescription string `json:"error_description"`
 }
 
 func (e *keycloakError) Error() string {
 	if e.ErrorDescription != "" {
-		return fmt.Sprintf("keycloak error: %s – %s", e.Error, e.ErrorDescription)
+		return fmt.Sprintf("keycloak error: %s – %s", e.ErrorCode, e.ErrorDescription)
 	}
-	return fmt.Sprintf("keycloak error: %s", e.Error)
+	return fmt.Sprintf("keycloak error: %s", e.ErrorCode)
 }
 
 // Client is an HTTP client for the Keycloak token endpoints.
@@ -227,7 +227,7 @@ func (c *Client) postToken(ctx context.Context, form url.Values) (*TokenResponse
 // plain HTTP status error when decoding fails.
 func parseKeycloakError(statusCode int, body []byte) error {
 	var kerr keycloakError
-	if json.Unmarshal(body, &kerr) == nil && kerr.Error != "" {
+	if json.Unmarshal(body, &kerr) == nil && kerr.ErrorCode != "" {
 		return &HTTPError{StatusCode: statusCode, Cause: &kerr}
 	}
 	return &HTTPError{StatusCode: statusCode, Cause: fmt.Errorf("HTTP %d: %s", statusCode, string(body))}

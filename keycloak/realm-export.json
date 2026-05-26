@@ -1,0 +1,812 @@
+{
+  "id": "kafka-realm",
+  "realm": "kafka-realm",
+  "displayName": "Kafka OAuth Realm",
+  "displayNameHtml": "<strong>Kafka OAuth</strong> Realm",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "notBefore": 0,
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "internationalizationEnabled": false,
+  "supportedLocales": [],
+  "defaultLocale": "en",
+  "authenticationFlows": [],
+  "authenticatorConfig": [],
+  "requiredActions": [],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "no-referrer",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "smtpServer": {},
+  "eventsEnabled": true,
+  "eventsListeners": ["jboss-logging"],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "TOKEN_EXCHANGE",
+    "CLIENT_LOGIN",
+    "CLIENT_LOGIN_ERROR",
+    "INTROSPECT_TOKEN",
+    "INTROSPECT_TOKEN_ERROR"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "identityProviders": [],
+  "identityProviderMappers": [],
+  "components": {
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "id": "rsa-generated",
+        "name": "rsa-generated",
+        "providerId": "rsa-generated",
+        "subComponents": {},
+        "config": {
+          "priority": ["100"],
+          "enabled": ["true"],
+          "active": ["true"],
+          "keySize": ["2048"],
+          "algorithm": ["RS256"]
+        }
+      }
+    ]
+  },
+  "attributes": {
+    "frontendUrl": "",
+    "acr.loa.map": "{}",
+    "token-exchange": "true",
+    "cibaBackchannelTokenDeliveryMode": "poll",
+    "cibaExpiresIn": "120",
+    "cibaInterval": "5",
+    "cibaAuthRequestedUserHint": "login_hint",
+    "parRequestUriLifespan": "60",
+    "realmReusableOtpCode": "false"
+  },
+  "userManagedAccessAllowed": false,
+
+  "clientScopes": [
+    {
+      "id": "kafka-access-scope",
+      "name": "kafka-access",
+      "description": "Scopes and claims required for Kafka SASL/OAUTHBEARER authentication",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Access Kafka on your behalf"
+      },
+      "protocolMappers": [
+        {
+          "id": "tenant-id-mapper",
+          "name": "tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "tenant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        },
+        {
+          "id": "realm-roles-mapper",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "usermodel.realmRoleMapping.rolePrefix": ""
+          }
+        },
+        {
+          "id": "audience-resolve-mapper",
+          "name": "audience resolve",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-resolve-mapper",
+          "consentRequired": false,
+          "config": {}
+        }
+      ]
+    },
+    {
+      "id": "openid-scope",
+      "name": "openid",
+      "description": "OpenID Connect built-in scope: openid",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "id": "sub-mapper",
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "false",
+            "id.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "profile-scope",
+      "name": "profile",
+      "description": "OpenID Connect built-in scope: profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${profileScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "id": "username-mapper",
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "full-name-mapper",
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "email-scope",
+      "name": "email",
+      "description": "OpenID Connect built-in scope: email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${emailScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "id": "email-mapper",
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "id": "email-verified-mapper",
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "emailVerified",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "id": "roles-scope",
+      "name": "roles",
+      "description": "OpenID Connect scope for add user roles to the access token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "${rolesScopeConsentText}"
+      },
+      "protocolMappers": [
+        {
+          "id": "realm-roles-scope-mapper",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "false",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        },
+        {
+          "id": "client-roles-scope-mapper",
+          "name": "client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "false",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        },
+        {
+          "id": "audience-resolve-scope-mapper",
+          "name": "audience resolve",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-resolve-mapper",
+          "consentRequired": false,
+          "config": {}
+        }
+      ]
+    },
+    {
+      "id": "web-origins-scope",
+      "name": "web-origins",
+      "description": "OpenID Connect scope for add allowed web origins to the access token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false",
+        "consent.screen.text": ""
+      },
+      "protocolMappers": [
+        {
+          "id": "allowed-origins-mapper",
+          "name": "allowed web origins",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-allowed-origins-mapper",
+          "consentRequired": false,
+          "config": {}
+        }
+      ]
+    },
+    {
+      "id": "acr-scope",
+      "name": "acr",
+      "description": "OpenID Connect scope for add acr (authentication context class reference) to the token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "id": "acr-loa-level-mapper",
+          "name": "acr loa level",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-acr-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "offline-access-scope",
+      "name": "offline_access",
+      "description": "OpenID Connect built-in scope: offline_access",
+      "protocol": "openid-connect",
+      "attributes": {
+        "consent.screen.text": "${offlineAccessScopeConsentText}",
+        "display.on.consent.screen": "true",
+        "include.in.token.scope": "true"
+      }
+    }
+  ],
+
+  "clients": [
+    {
+      "id": "kafka-broker-client",
+      "clientId": "kafka-broker",
+      "name": "Kafka Broker",
+      "description": "Service account client representing the Kafka broker. Target audience for token exchange.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "kafka-broker-secret",
+      "redirectUris": [],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "saml.assertion.signature": "false",
+        "saml.force.post.binding": "false",
+        "saml.multivalued.roles": "false",
+        "saml.encrypt": "false",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "saml.server.signature": "false",
+        "saml.server.signature.keyinfo.ext": "false",
+        "exclude.session.state.from.auth.response": "false",
+        "backchannel.logout.session.required": "true",
+        "client_credentials.use_refresh_token": "false",
+        "saml_force_name_id_format": "false",
+        "saml.client.signature": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "saml.authnstatement": "false",
+        "display.on.consent.screen": "false",
+        "saml.onetimeuse.condition": "false",
+        "token.exchange.permissions.enabled": "true"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": false,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": ["kafka-access", "web-origins", "acr"],
+      "optionalClientScopes": ["offline_access"],
+      "authorizationServicesEnabled": true,
+      "authorizationSettings": {
+        "allowRemoteResourceManagement": true,
+        "policyEnforcementMode": "ENFORCING",
+        "resources": [
+          {
+            "name": "token-exchange",
+            "type": "urn:kafka-broker:resources:token-exchange",
+            "ownerManagedAccess": false,
+            "displayName": "Token Exchange Resource",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+              {
+                "name": "token-exchange"
+              }
+            ]
+          }
+        ],
+        "policies": [
+          {
+            "id": "allow-token-exchange-policy",
+            "name": "allow-token-exchange",
+            "description": "Allow auth-service and kafka-client to exchange tokens targeting kafka-broker",
+            "type": "client",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "clients": "[\"auth-service\",\"kafka-client\"]"
+            }
+          },
+          {
+            "id": "token-exchange-permission",
+            "name": "token-exchange.permission.client.kafka-broker",
+            "description": "Permissions for token-exchange for client kafka-broker",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"token-exchange\"]",
+              "scopes": "[\"token-exchange\"]",
+              "applyPolicies": "[\"allow-token-exchange\"]"
+            }
+          }
+        ],
+        "scopes": [
+          {
+            "name": "token-exchange"
+          }
+        ],
+        "decisionStrategy": "UNANIMOUS"
+      }
+    },
+    {
+      "id": "auth-service-client",
+      "clientId": "auth-service",
+      "name": "Auth Service",
+      "description": "Backend service that proxies Keycloak token operations and performs token exchange on behalf of users.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "auth-service-secret",
+      "redirectUris": ["http://localhost:8080/*", "http://auth-service:8080/*"],
+      "webOrigins": ["+"],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "saml.assertion.signature": "false",
+        "saml.force.post.binding": "false",
+        "saml.multivalued.roles": "false",
+        "saml.encrypt": "false",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "saml.server.signature": "false",
+        "saml.server.signature.keyinfo.ext": "false",
+        "exclude.session.state.from.auth.response": "false",
+        "backchannel.logout.session.required": "true",
+        "client_credentials.use_refresh_token": "false",
+        "saml_force_name_id_format": "false",
+        "saml.client.signature": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "saml.authnstatement": "false",
+        "display.on.consent.screen": "false",
+        "saml.onetimeuse.condition": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": ["kafka-access", "openid", "profile", "email", "web-origins", "acr"],
+      "optionalClientScopes": ["offline_access", "roles"]
+    },
+    {
+      "id": "kafka-client-client",
+      "clientId": "kafka-client",
+      "name": "Kafka Client",
+      "description": "Generic Kafka client application for direct token-based access. Used for testing and CLI tooling.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "kafka-client-secret",
+      "redirectUris": [],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "saml.assertion.signature": "false",
+        "saml.force.post.binding": "false",
+        "saml.multivalued.roles": "false",
+        "saml.encrypt": "false",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "saml.server.signature": "false",
+        "saml.server.signature.keyinfo.ext": "false",
+        "exclude.session.state.from.auth.response": "false",
+        "backchannel.logout.session.required": "true",
+        "client_credentials.use_refresh_token": "false",
+        "saml_force_name_id_format": "false",
+        "saml.client.signature": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "saml.authnstatement": "false",
+        "display.on.consent.screen": "false",
+        "saml.onetimeuse.condition": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": false,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": ["kafka-access", "web-origins", "acr"],
+      "optionalClientScopes": ["offline_access", "profile", "email", "roles"]
+    }
+  ],
+
+  "roles": {
+    "realm": [
+      {
+        "id": "kafka-admin-role",
+        "name": "kafka-admin",
+        "description": "Full administrative access to all Kafka resources across all tenants.",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "kafka-realm",
+        "attributes": {}
+      },
+      {
+        "id": "kafka-producer-role",
+        "name": "kafka-producer",
+        "description": "Allows producing (writing) messages to authorised Kafka topics.",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "kafka-realm",
+        "attributes": {}
+      },
+      {
+        "id": "kafka-consumer-role",
+        "name": "kafka-consumer",
+        "description": "Allows consuming (reading) messages from authorised Kafka topics.",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "kafka-realm",
+        "attributes": {}
+      },
+      {
+        "id": "kafka-superuser-role",
+        "name": "kafka-superuser",
+        "description": "Super-user bypass: all Kafka operations allowed regardless of tenant or resource.",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "kafka-realm",
+        "attributes": {}
+      },
+      {
+        "id": "tenant-admin-role",
+        "name": "tenant-admin",
+        "description": "Administrative access within a single tenant (manage topics, ACLs, consumer groups).",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "kafka-realm",
+        "attributes": {}
+      }
+    ],
+    "client": {
+      "kafka-broker": [
+        {
+          "id": "kafka-broker-service-role",
+          "name": "kafka-broker-service",
+          "description": "Internal service role for the Kafka broker service account.",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "kafka-broker-client",
+          "attributes": {}
+        }
+      ],
+      "auth-service": [
+        {
+          "id": "auth-service-service-role",
+          "name": "auth-service-service",
+          "description": "Internal service role for the auth-service service account.",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "auth-service-client",
+          "attributes": {}
+        }
+      ]
+    }
+  },
+
+  "groups": [
+    {
+      "id": "tenant-a-users-group",
+      "name": "tenant-a-users",
+      "path": "/tenant-a-users",
+      "attributes": {
+        "tenant_id": ["tenant-a"]
+      },
+      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "subGroups": []
+    },
+    {
+      "id": "tenant-b-users-group",
+      "name": "tenant-b-users",
+      "path": "/tenant-b-users",
+      "attributes": {
+        "tenant_id": ["tenant-b"]
+      },
+      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "subGroups": []
+    },
+    {
+      "id": "kafka-admins-group",
+      "name": "kafka-admins",
+      "path": "/kafka-admins",
+      "attributes": {
+        "tenant_id": ["admin"]
+      },
+      "realmRoles": ["kafka-admin", "kafka-superuser", "kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "subGroups": []
+    }
+  ],
+
+  "users": [
+    {
+      "id": "alice-user-id",
+      "createdTimestamp": 1700000000000,
+      "username": "alice",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "TenantA",
+      "email": "alice@tenant-a.example.com",
+      "attributes": {
+        "tenant_id": ["tenant-a"]
+      },
+      "credentials": [
+        {
+          "id": "alice-credential-id",
+          "type": "password",
+          "temporary": false,
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"alice_password\",\"salt\":\"\"}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "groups": ["/tenant-a-users"],
+      "notBefore": 0,
+      "access": {
+        "manageGroupMembership": true,
+        "view": true,
+        "mapRoles": true,
+        "impersonate": false,
+        "manage": true
+      }
+    },
+    {
+      "id": "bob-user-id",
+      "createdTimestamp": 1700000001000,
+      "username": "bob",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "TenantB",
+      "email": "bob@tenant-b.example.com",
+      "attributes": {
+        "tenant_id": ["tenant-b"]
+      },
+      "credentials": [
+        {
+          "id": "bob-credential-id",
+          "type": "password",
+          "temporary": false,
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"bob_password\",\"salt\":\"\"}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "groups": ["/tenant-b-users"],
+      "notBefore": 0,
+      "access": {
+        "manageGroupMembership": true,
+        "view": true,
+        "mapRoles": true,
+        "impersonate": false,
+        "manage": true
+      }
+    },
+    {
+      "id": "kafka-admin-user-id",
+      "createdTimestamp": 1700000002000,
+      "username": "kafka-admin-user",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Kafka",
+      "lastName": "Administrator",
+      "email": "kafka-admin@admin.example.com",
+      "attributes": {
+        "tenant_id": ["admin"]
+      },
+      "credentials": [
+        {
+          "id": "kafka-admin-credential-id",
+          "type": "password",
+          "temporary": false,
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"admin_password\",\"salt\":\"\"}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["kafka-admin", "kafka-superuser", "kafka-producer", "kafka-consumer"],
+      "clientRoles": {},
+      "groups": ["/kafka-admins"],
+      "notBefore": 0,
+      "access": {
+        "manageGroupMembership": true,
+        "view": true,
+        "mapRoles": true,
+        "impersonate": false,
+        "manage": true
+      }
+    }
+  ],
+
+  "scopeMappings": [],
+  "clientScopeMappings": {},
+
+  "defaultDefaultClientScopes": [
+    "role_list",
+    "profile",
+    "email",
+    "web-origins",
+    "acr"
+  ],
+  "defaultOptionalClientScopes": [
+    "offline_access",
+    "address",
+    "phone",
+    "microprofile-jwt"
+  ],
+
+  "browserFlow": "browser",
+  "registrationFlow": "registration",
+  "directGrantFlow": "direct grant",
+  "resetCredentialsFlow": "reset credentials",
+  "clientAuthenticationFlow": "clients",
+  "dockerAuthenticationFlow": "docker auth",
+
+  "keycloakVersion": "24.0.0",
+  "userFederationProviders": [],
+  "userFederationMappers": []
+}

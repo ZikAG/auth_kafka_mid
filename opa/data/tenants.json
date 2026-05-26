@@ -1,0 +1,22 @@
+{
+  "tenants": {
+    "tenant-a": {
+      "id": "tenant-a",
+      "name": "Tenant A",
+      "topic_prefix": "tenant-a-",
+      "quota_producer_byte_rate": 1048576,
+      "quota_consumer_byte_rate": 2097152,
+      "allowed_topics": ["events", "orders", "notifications"],
+      "admin_users": ["alice-admin"]
+    },
+    "tenant-b": {
+      "id": "tenant-b",
+      "name": "Tenant B",
+      "topic_prefix": "tenant-b-",
+      "quota_producer_byte_rate": 1048576,
+      "quota_consumer_byte_rate": 2097152,
+      "allowed_topics": ["events", "orders", "notifications"],
+      "admin_users": ["bob-admin"]
+    }
+  }
+}
