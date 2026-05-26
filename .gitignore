@@ -27,6 +27,14 @@ go.work.sum
 # env file
 .env
 
+# Maven build output
+target/
+*.jar
+
+# TLS certificates (generated at runtime)
+certs/
+
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.iml
