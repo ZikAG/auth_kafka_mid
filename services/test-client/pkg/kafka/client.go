@@ -17,31 +17,32 @@ import (
 // SASL/OAUTHBEARER mechanism implementation
 // ---------------------------------------------------------------------------
 
-// OAuthBearerMechanism implements sasl.Mechanism for OAUTHBEARER.
-// kafka-go does not ship a built-in OAUTHBEARER implementation, so we provide
-// one that follows the OAUTHBEARER initial client response format defined in
-// RFC 7628 and Kafka protocol extension KIP-255.
+// OAuthBearerMechanism implements both sasl.Mechanism and sasl.StateMachine
+// for the OAUTHBEARER SASL profile (RFC 7628 / Kafka KIP-255).
+// kafka-go requires Start() to return a sasl.StateMachine, so this type
+// satisfies both interfaces — Start returns itself as the state machine.
 type OAuthBearerMechanism struct {
 	Token string
 }
 
 var _ sasl.Mechanism = OAuthBearerMechanism{}
+var _ sasl.StateMachine = OAuthBearerMechanism{}
 
 // Name returns the SASL mechanism name registered with the Kafka broker.
 func (m OAuthBearerMechanism) Name() string { return "OAUTHBEARER" }
 
-// Start produces the initial SASL client response.
-// Format (GS2 + OAUTHBEARER extension):
+// Start produces the initial SASL client response and returns itself as the
+// StateMachine for any subsequent challenge round-trips.
+// Format (GS2 header + OAUTHBEARER extension):
 //
 //	n,,\x01auth=Bearer <token>\x01\x01
-func (m OAuthBearerMechanism) Start(_ context.Context) (mechanism string, initialResponse []byte, err error) {
+func (m OAuthBearerMechanism) Start(_ context.Context) (sasl.StateMachine, []byte, error) {
 	authData := fmt.Sprintf("n,,\x01auth=Bearer %s\x01\x01", m.Token)
-	return "OAUTHBEARER", []byte(authData), nil
+	return m, []byte(authData), nil
 }
 
-// Next handles server challenges.  OAUTHBEARER has no additional round-trips
-// after the initial response if the token is accepted; an error challenge from
-// the broker is handled by the connection layer.
+// Next handles server challenges. OAUTHBEARER is a single-round-trip mechanism;
+// after the initial response the exchange is complete (done=true).
 func (m OAuthBearerMechanism) Next(_ context.Context, _ []byte) (done bool, response []byte, err error) {
 	return true, nil, nil
 }
