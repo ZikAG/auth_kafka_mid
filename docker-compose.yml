@@ -83,6 +83,8 @@ services:
     hostname: kafka
     entrypoint: ["/bin/bash", "/opt/kafka-scripts/start.sh"]
     environment:
+      # Disable GC log file (logs volume not writable by appuser at runtime)
+      KAFKA_GC_LOG_OPTS: " "
       # JMX (processed by kafka-run-class.sh, not the configure script)
       JMX_PORT: "9101"
       KAFKA_JMX_HOSTNAME: kafka
