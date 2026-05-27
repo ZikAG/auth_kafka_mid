@@ -25,6 +25,7 @@ services:
   # ─── PostgreSQL for Keycloak ────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
+    platform: linux/arm64
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -42,6 +43,7 @@ services:
   # ─── Keycloak IAM ──────────────────────────────────────────────────────────
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.4
+    platform: linux/arm64
     command: ["start-dev", "--import-realm"]
     environment:
       KC_DB: postgres
@@ -77,6 +79,7 @@ services:
   # ─── Apache Kafka (KRaft mode) ──────────────────────────────────────────────
   kafka:
     image: apache/kafka:3.7.1
+    platform: linux/arm64
     hostname: kafka
     environment:
       # KRaft settings
@@ -163,6 +166,7 @@ services:
   # ─── Kafka Init (topics + tenants) ─────────────────────────────────────────
   kafka-init:
     image: apache/kafka:3.7.1
+    platform: linux/arm64
     volumes:
       - ./scripts/init-kafka-topics.sh:/init-kafka-topics.sh:ro
     entrypoint: ["/bin/sh", "/init-kafka-topics.sh"]
@@ -238,6 +242,7 @@ services:
   # ─── OPA Policy Engine ──────────────────────────────────────────────────────
   opa:
     image: openpolicyagent/opa:0.65.0
+    platform: linux/arm64
     command: ["run", "--server", "--log-level=info", "--addr=0.0.0.0:8181", "/policies", "/data"]
     volumes:
       - ./opa/policies:/policies:ro
@@ -255,6 +260,7 @@ services:
   # ─── Prometheus ─────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.51.2
+    platform: linux/arm64
     volumes:
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
@@ -271,6 +277,7 @@ services:
   # ─── Grafana ────────────────────────────────────────────────────────────────
   grafana:
     image: grafana/grafana:10.4.3
+    platform: linux/arm64
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin_password
       GF_USERS_ALLOW_SIGN_UP: "false"
