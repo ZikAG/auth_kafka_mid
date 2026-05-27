@@ -109,10 +109,10 @@ services:
     networks:
       - kafka-net
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list 2>/dev/null || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
+      test: ["CMD-SHELL", "(echo > /dev/tcp/localhost/29092) 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
       start_period: 30s
 
   # ─── Kafka Init (topics + tenants) ─────────────────────────────────────────
