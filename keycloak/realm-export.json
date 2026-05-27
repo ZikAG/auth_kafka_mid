@@ -59,7 +59,9 @@
   },
   "smtpServer": {},
   "eventsEnabled": true,
-  "eventsListeners": ["jboss-logging"],
+  "eventsListeners": [
+    "jboss-logging"
+  ],
   "enabledEventTypes": [
     "LOGIN",
     "LOGIN_ERROR",
@@ -82,11 +84,21 @@
         "providerId": "rsa-generated",
         "subComponents": {},
         "config": {
-          "priority": ["100"],
-          "enabled": ["true"],
-          "active": ["true"],
-          "keySize": ["2048"],
-          "algorithm": ["RS256"]
+          "priority": [
+            "100"
+          ],
+          "enabled": [
+            "true"
+          ],
+          "active": [
+            "true"
+          ],
+          "keySize": [
+            "2048"
+          ],
+          "algorithm": [
+            "RS256"
+          ]
         }
       }
     ]
@@ -103,7 +115,6 @@
     "realmReusableOtpCode": "false"
   },
   "userManagedAccessAllowed": false,
-
   "clientScopes": [
     {
       "id": "kafka-access-scope",
@@ -372,7 +383,6 @@
       }
     }
   ],
-
   "clients": [
     {
       "id": "kafka-broker-client",
@@ -416,8 +426,14 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": ["kafka-access", "web-origins", "acr"],
-      "optionalClientScopes": ["offline_access"],
+      "defaultClientScopes": [
+        "kafka-access",
+        "web-origins",
+        "acr"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
       "authorizationServicesEnabled": true,
       "authorizationSettings": {
         "allowRemoteResourceManagement": true,
@@ -479,8 +495,13 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "auth-service-secret",
-      "redirectUris": ["http://localhost:8080/*", "http://auth-service:8080/*"],
-      "webOrigins": ["+"],
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://auth-service:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -512,8 +533,18 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": ["kafka-access", "openid", "profile", "email", "web-origins", "acr"],
-      "optionalClientScopes": ["offline_access", "roles"]
+      "defaultClientScopes": [
+        "kafka-access",
+        "openid",
+        "profile",
+        "email",
+        "web-origins",
+        "acr"
+      ],
+      "optionalClientScopes": [
+        "offline_access",
+        "roles"
+      ]
     },
     {
       "id": "kafka-client-client",
@@ -556,11 +587,19 @@
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": ["kafka-access", "web-origins", "acr"],
-      "optionalClientScopes": ["offline_access", "profile", "email", "roles"]
+      "defaultClientScopes": [
+        "kafka-access",
+        "web-origins",
+        "acr"
+      ],
+      "optionalClientScopes": [
+        "offline_access",
+        "profile",
+        "email",
+        "roles"
+      ]
     }
   ],
-
   "roles": {
     "realm": [
       {
@@ -634,16 +673,20 @@
       ]
     }
   },
-
   "groups": [
     {
       "id": "tenant-a-users-group",
       "name": "tenant-a-users",
       "path": "/tenant-a-users",
       "attributes": {
-        "tenant_id": ["tenant-a"]
+        "tenant_id": [
+          "tenant-a"
+        ]
       },
-      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
       "subGroups": []
     },
@@ -652,9 +695,14 @@
       "name": "tenant-b-users",
       "path": "/tenant-b-users",
       "attributes": {
-        "tenant_id": ["tenant-b"]
+        "tenant_id": [
+          "tenant-b"
+        ]
       },
-      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
       "subGroups": []
     },
@@ -663,14 +711,20 @@
       "name": "kafka-admins",
       "path": "/kafka-admins",
       "attributes": {
-        "tenant_id": ["admin"]
+        "tenant_id": [
+          "admin"
+        ]
       },
-      "realmRoles": ["kafka-admin", "kafka-superuser", "kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-admin",
+        "kafka-superuser",
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
       "subGroups": []
     }
   ],
-
   "users": [
     {
       "id": "alice-user-id",
@@ -683,22 +737,27 @@
       "lastName": "TenantA",
       "email": "alice@tenant-a.example.com",
       "attributes": {
-        "tenant_id": ["tenant-a"]
+        "tenant_id": [
+          "tenant-a"
+        ]
       },
       "credentials": [
         {
-          "id": "alice-credential-id",
           "type": "password",
-          "temporary": false,
-          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
-          "secretData": "{\"value\":\"alice_password\",\"salt\":\"\"}"
+          "value": "alice_password",
+          "temporary": false
         }
       ],
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
-      "groups": ["/tenant-a-users"],
+      "groups": [
+        "/tenant-a-users"
+      ],
       "notBefore": 0,
       "access": {
         "manageGroupMembership": true,
@@ -719,22 +778,27 @@
       "lastName": "TenantB",
       "email": "bob@tenant-b.example.com",
       "attributes": {
-        "tenant_id": ["tenant-b"]
+        "tenant_id": [
+          "tenant-b"
+        ]
       },
       "credentials": [
         {
-          "id": "bob-credential-id",
           "type": "password",
-          "temporary": false,
-          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
-          "secretData": "{\"value\":\"bob_password\",\"salt\":\"\"}"
+          "value": "bob_password",
+          "temporary": false
         }
       ],
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": ["kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
-      "groups": ["/tenant-b-users"],
+      "groups": [
+        "/tenant-b-users"
+      ],
       "notBefore": 0,
       "access": {
         "manageGroupMembership": true,
@@ -755,22 +819,29 @@
       "lastName": "Administrator",
       "email": "kafka-admin@admin.example.com",
       "attributes": {
-        "tenant_id": ["admin"]
+        "tenant_id": [
+          "admin"
+        ]
       },
       "credentials": [
         {
-          "id": "kafka-admin-credential-id",
           "type": "password",
-          "temporary": false,
-          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}",
-          "secretData": "{\"value\":\"admin_password\",\"salt\":\"\"}"
+          "value": "admin_password",
+          "temporary": false
         }
       ],
       "disableableCredentialTypes": [],
       "requiredActions": [],
-      "realmRoles": ["kafka-admin", "kafka-superuser", "kafka-producer", "kafka-consumer"],
+      "realmRoles": [
+        "kafka-admin",
+        "kafka-superuser",
+        "kafka-producer",
+        "kafka-consumer"
+      ],
       "clientRoles": {},
-      "groups": ["/kafka-admins"],
+      "groups": [
+        "/kafka-admins"
+      ],
       "notBefore": 0,
       "access": {
         "manageGroupMembership": true,
@@ -781,10 +852,8 @@
       }
     }
   ],
-
   "scopeMappings": [],
   "clientScopeMappings": {},
-
   "defaultDefaultClientScopes": [
     "role_list",
     "profile",
@@ -798,14 +867,12 @@
     "phone",
     "microprofile-jwt"
   ],
-
   "browserFlow": "browser",
   "registrationFlow": "registration",
   "directGrantFlow": "direct grant",
   "resetCredentialsFlow": "reset credentials",
   "clientAuthenticationFlow": "clients",
   "dockerAuthenticationFlow": "docker auth",
-
   "keycloakVersion": "24.0.0",
   "userFederationProviders": [],
   "userFederationMappers": []
