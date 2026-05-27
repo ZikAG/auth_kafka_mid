@@ -70,7 +70,7 @@ services:
     networks:
       - kafka-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf --max-time 5 http://localhost:8080/health/ready | grep -q UP || exit 1"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
       interval: 20s
       timeout: 15s
       retries: 25
