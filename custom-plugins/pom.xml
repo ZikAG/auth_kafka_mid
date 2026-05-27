@@ -144,15 +144,8 @@
                             <Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>
-                    <!-- Exclude kafka-related jars from the fat jar since they are provided -->
-                    <filters>
-                        <filter>
-                            <artifact>org.apache.kafka:*</artifact>
-                            <excludes>
-                                <exclude>**/*</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
+                    <!-- Kafka deps are <scope>provided</scope> so they are
+                         excluded from the fat jar automatically. -->
                 </configuration>
                 <executions>
                     <execution>
