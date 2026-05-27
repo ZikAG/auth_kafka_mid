@@ -242,7 +242,7 @@ services:
   # ─── OPA Policy Engine ──────────────────────────────────────────────────────
   opa:
     image: openpolicyagent/opa:0.65.0
-    platform: linux/arm64
+    platform: linux/amd64
     command: ["run", "--server", "--log-level=info", "--addr=0.0.0.0:8181", "/policies", "/data"]
     volumes:
       - ./opa/policies:/policies:ro
