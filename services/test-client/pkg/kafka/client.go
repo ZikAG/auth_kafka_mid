@@ -202,20 +202,23 @@ func (c *Client) buildTLSConfig() (*tls.Config, error) {
 	return tlsCfg, nil
 }
 
-// buildDialer returns a kafka-go Dialer configured for SASL/OAUTHBEARER or
-// plain TLS, depending on Config.SecurityProto.
+// buildDialer returns a kafka-go Dialer configured for SASL/OAUTHBEARER,
+// with TLS only when SecurityProto is SASL_SSL.
 func (c *Client) buildDialer() (*kafkago.Dialer, error) {
 	dialer := &kafkago.Dialer{
 		Timeout:   10 * time.Second,
 		DualStack: true,
 	}
 
-	if c.config.SecurityProto == "SASL_SSL" {
+	switch c.config.SecurityProto {
+	case "SASL_SSL":
 		tlsCfg, err := c.buildTLSConfig()
 		if err != nil {
 			return nil, err
 		}
 		dialer.TLS = tlsCfg
+		dialer.SASLMechanism = OAuthBearerMechanism{Token: c.config.OAuthToken}
+	case "SASL_PLAINTEXT":
 		dialer.SASLMechanism = OAuthBearerMechanism{Token: c.config.OAuthToken}
 	}
 
@@ -228,12 +231,15 @@ func (c *Client) buildTransport() (*kafkago.Transport, error) {
 		DialTimeout: 10 * time.Second,
 	}
 
-	if c.config.SecurityProto == "SASL_SSL" {
+	switch c.config.SecurityProto {
+	case "SASL_SSL":
 		tlsCfg, err := c.buildTLSConfig()
 		if err != nil {
 			return nil, err
 		}
 		transport.TLS = tlsCfg
+		transport.SASL = OAuthBearerMechanism{Token: c.config.OAuthToken}
+	case "SASL_PLAINTEXT":
 		transport.SASL = OAuthBearerMechanism{Token: c.config.OAuthToken}
 	}
 

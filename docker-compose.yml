@@ -9,20 +9,8 @@ volumes:
   kafka-data:
   kafka-logs:
   kafka-plugins:
-  certs:
 
 services:
-  # ─── TLS Certificate Generator ─────────────────────────────────────────────
-  cert-init:
-    image: alpine/openssl:latest
-    volumes:
-      - certs:/certs
-      - ./scripts/generate-certs.sh:/generate-certs.sh:ro
-    entrypoint: ["/bin/sh", "/generate-certs.sh"]
-    networks:
-      - kafka-net
-    restart: "no"
-
   # ─── Java Plugin Builder ────────────────────────────────────────────────────
   plugin-builder:
     build:
@@ -98,15 +86,15 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
 
       # Listeners
-      KAFKA_LISTENERS: CONTROLLER://0.0.0.0:9091,SASL_SSL://0.0.0.0:9093,PLAINTEXT://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka:9093,PLAINTEXT://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,SASL_SSL:SASL_SSL,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_LISTENERS: CONTROLLER://0.0.0.0:9091,SASL_PLAINTEXT://0.0.0.0:9092,PLAINTEXT://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka:9092,PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
 
       # SASL/OAUTHBEARER
       KAFKA_SASL_ENABLED_MECHANISMS: OAUTHBEARER
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: OAUTHBEARER
-      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_JAAS_CONFIG: >-
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_OAUTHBEARER_SASL_JAAS_CONFIG: >-
         org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required
         oauth.jwks.endpoint.uri="http://keycloak:8080/realms/kafka-realm/protocol/openid-connect/certs"
         oauth.token.endpoint.uri="http://keycloak:8080/realms/kafka-realm/protocol/openid-connect/token"
@@ -114,16 +102,8 @@ services:
         oauth.client.secret="kafka-broker-secret"
         oauth.valid.issuer.uri="http://keycloak:8080/realms/kafka-realm"
         oauth.username.claim="sub";
-      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerLoginCallbackHandler
-      KAFKA_LISTENER_NAME_SASL_SSL_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerValidatorCallbackHandler
-
-      # TLS (PEM format - alpine/openssl compatible)
-      KAFKA_SSL_KEYSTORE_TYPE: PEM
-      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
-      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.crt
-      KAFKA_SSL_KEY_PASSWORD: kafka_key_password
-      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/ca.crt
-      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerLoginCallbackHandler
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: com.kafkaoauth.OAuthBearerValidatorCallbackHandler
 
       # Custom Authorizer
       KAFKA_AUTHORIZER_CLASS_NAME: com.kafkaoauth.authorizer.CustomKafkaAuthorizer
@@ -162,14 +142,11 @@ services:
       - kafka-data:/var/lib/kafka/data
       - kafka-logs:/opt/kafka/logs
       - kafka-plugins:/opt/kafka/plugins
-      - certs:/etc/kafka/secrets:ro
       - ./config/kafka/log4j.properties:/opt/kafka/config/log4j.properties:ro
     ports:
-      - "9093:9093"
+      - "9092:9092"
       - "9101:9101"
     depends_on:
-      cert-init:
-        condition: service_completed_successfully
       plugin-builder:
         condition: service_completed_successfully
       keycloak:
@@ -188,7 +165,6 @@ services:
     image: apache/kafka:3.7.1
     volumes:
       - ./scripts/init-kafka-topics.sh:/init-kafka-topics.sh:ro
-      - certs:/etc/kafka/secrets:ro
     entrypoint: ["/bin/sh", "/init-kafka-topics.sh"]
     environment:
       KAFKA_BOOTSTRAP: kafka:29092
@@ -240,10 +216,9 @@ services:
       dockerfile: Dockerfile
     environment:
       AUTH_SERVICE_URL: "http://auth-service:8080"
-      KAFKA_BOOTSTRAP: "kafka:9093"
-      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      KAFKA_BOOTSTRAP: "kafka:9092"
+      KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
       KAFKA_SASL_MECHANISM: "OAUTHBEARER"
-      KAFKA_SSL_CA_CERT: "/certs/ca.crt"
       TENANT_A_USER: "alice"
       TENANT_A_PASSWORD: "alice_password"
       TENANT_A_ID: "tenant-a"
@@ -251,8 +226,6 @@ services:
       TENANT_B_PASSWORD: "bob_password"
       TENANT_B_ID: "tenant-b"
       LOG_LEVEL: "info"
-    volumes:
-      - certs:/certs:ro
     depends_on:
       auth-service:
         condition: service_healthy

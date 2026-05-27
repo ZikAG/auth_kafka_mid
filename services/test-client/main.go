@@ -43,18 +43,18 @@ func loadConfig() config {
 
 	return config{
 		AuthServiceURL: getEnvDefault("AUTH_SERVICE_URL", "http://auth-service:8080"),
-		KafkaBootstrap: getEnvDefault("KAFKA_BOOTSTRAP", "kafka:9093"),
-		SecurityProto:  getEnvDefault("SECURITY_PROTO", "SASL_SSL"),
-		SASLMechanism:  getEnvDefault("SASL_MECHANISM", "OAUTHBEARER"),
-		CAcertPath:     getEnvDefault("CA_CERT_PATH", "/certs/ca.crt"),
+		KafkaBootstrap: getEnvDefault("KAFKA_BOOTSTRAP", "kafka:9092"),
+		SecurityProto:  getEnvDefault("KAFKA_SECURITY_PROTOCOL", "SASL_PLAINTEXT"),
+		SASLMechanism:  getEnvDefault("KAFKA_SASL_MECHANISM", "OAUTHBEARER"),
+		CAcertPath:     getEnvDefault("CA_CERT_PATH", ""),
 
-		AliceUsername: getEnvDefault("ALICE_USERNAME", "alice"),
-		AlicePassword: getEnvDefault("ALICE_PASSWORD", "alice_password"),
-		AliceTenantID: getEnvDefault("ALICE_TENANT_ID", "tenant-a"),
+		AliceUsername: getEnvDefault("TENANT_A_USER", "alice"),
+		AlicePassword: getEnvDefault("TENANT_A_PASSWORD", "alice_password"),
+		AliceTenantID: getEnvDefault("TENANT_A_ID", "tenant-a"),
 
-		BobUsername: getEnvDefault("BOB_USERNAME", "bob"),
-		BobPassword: getEnvDefault("BOB_PASSWORD", "bob_password"),
-		BobTenantID: getEnvDefault("BOB_TENANT_ID", "tenant-b"),
+		BobUsername: getEnvDefault("TENANT_B_USER", "bob"),
+		BobPassword: getEnvDefault("TENANT_B_PASSWORD", "bob_password"),
+		BobTenantID: getEnvDefault("TENANT_B_ID", "tenant-b"),
 	}
 }
 
