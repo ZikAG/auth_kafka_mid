@@ -130,7 +130,7 @@ public class OpaKafkaAuthorizer implements Authorizer {
         // Parse super users
         Object superUsersConfig = configs.get("authorizer.super.users");
         if (superUsersConfig instanceof String raw && !raw.isBlank()) {
-            superUsers = Set.of(raw.split("[,\\s]+"));
+            superUsers = Set.of(raw.split("[,;\\s]+"));
         }
 
         log.info("OpaKafkaAuthorizer configured: opaUrl={}, timeoutMs={}, superUsers={}",

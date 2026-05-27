@@ -122,7 +122,7 @@ public class CustomKafkaAuthorizer implements Authorizer {
         // Parse authorizer.super.users (space or comma separated)
         Object superUsersConfig = configs.get("authorizer.super.users");
         if (superUsersConfig instanceof String raw && !raw.isBlank()) {
-            superUsers = Set.of(raw.split("[,\\s]+"));
+            superUsers = Set.of(raw.split("[,;\\s]+"));
         } else {
             superUsers = Collections.emptySet();
         }

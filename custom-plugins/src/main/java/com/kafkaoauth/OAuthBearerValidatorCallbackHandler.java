@@ -108,12 +108,12 @@ public class OAuthBearerValidatorCallbackHandler implements AuthenticateCallback
         validIssuerUri = requiredOption(options, OPTION_VALID_ISSUER);
         usernameClaim = optionalOption(options, OPTION_USERNAME_CLAIM, DEFAULT_USERNAME_CLAIM);
 
-        // Perform initial JWKS load eagerly so we fail fast on misconfiguration
+        // Best-effort initial JWKS load; failures are non-fatal — the handler will
+        // retry on the first incoming connection and on each background refresh tick.
         try {
             refreshJwkSet();
         } catch (Exception e) {
-            throw new IllegalStateException(
-                    "Failed to load JWKS from " + jwksEndpointUri + " during startup", e);
+            log.warn("Initial JWKS load from {} failed (will retry): {}", jwksEndpointUri, e.getMessage());
         }
 
         // Schedule background JWKS refresh
