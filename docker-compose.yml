@@ -3,9 +3,6 @@ version: '3.9'
 networks:
   kafka-net:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
 volumes:
   postgres-data:
